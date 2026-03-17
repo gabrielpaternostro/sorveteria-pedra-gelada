@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sorveteria Pedra Gelada</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- NOTIFICATION BANNER -->
+<div id="notificationBanner" class="notification-banner hidden">
+  <span id="notificationText"></span>
+  <button onclick="closeNotification()">x</button>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span class="brand-icon">🍦</span>
+    <span class="brand-name">Pedra Gelada</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#cardapio">Cardápio</a></li>
+    <li><a href="#pedidos">Meus Pedidos</a></li>
+    <li><a href="dashboard.html" target="_blank">Dashboard</a></li>
+    <li>
+      <button class="btn-cart" onclick="toggleCart()">
+        🛒 Carrinho <span id="cartCount" class="cart-badge">0</span>
+      </button>
+    </li>
+  </ul>
+  <button class="nav-toggle" onclick="toggleNav()">&#9776;</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <p class="hero-sub">Bem-vindo à</p>
+    <h1 class="hero-title">Sorveteria<br/><span>Pedra Gelada</span></h1>
+    <p class="hero-desc">Os melhores sorvetes artesanais da cidade, feitos com ingredientes selecionados e muito amor.</p>
+    <a href="#cardapio" class="btn-primary">Ver Cardápio</a>
+  </div>
+  <div class="hero-visual">
+    <div class="ice-cream-stack">
+      <div class="scoop s1"></div>
+      <div class="scoop s2"></div>
+      <div class="scoop s3"></div>
+      <div class="cone"></div>
+    </div>
+  </div>
+</section>
+
+<!-- CARDÁPIO -->
+<section id="cardapio" class="section">
+  <h2 class="section-title">Nosso Cardápio</h2>
+  <p class="section-sub">Escolha seu sabor favorito</p>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<!-- CARRINHO LATERAL -->
+<div id="cartOverlay" class="cart-overlay hidden" onclick="toggleCart()"></div>
+<aside id="cartDrawer" class="cart-drawer hidden">
+  <div class="cart-header">
+    <h3>Seu Pedido</h3>
+    <button onclick="toggleCart()">&#10005;</button>
+  </div>
+  <div id="cartItems" class="cart-items"></div>
+  <div class="cart-footer">
+    <div class="cart-total">
+      <span>Total:</span>
+      <strong id="cartTotal">R$ 0,00</strong>
+    </div>
+    <button class="btn-primary full" onclick="openPayment()">Finalizar Pedido</button>
+  </div>
+</aside>
+
+<!-- MODAL DE PAGAMENTO -->
+<div id="paymentModal" class="modal hidden">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closePayment()">&#10005;</button>
+    <h2>Finalizar Pedido</h2>
+
+    <!-- DADOS DO CLIENTE -->
+    <div class="form-group">
+      <label>Seu Nome</label>
+      <input type="text" id="customerName" placeholder="Ex: João Silva"/>
+    </div>
+    <div class="form-group">
+      <label>Telefone / WhatsApp</label>
+      <input type="tel" id="customerPhone" placeholder="(11) 99999-9999"/>
+    </div>
+
+    <!-- FORMA DE PAGAMENTO -->
+    <div class="payment-methods">
+      <h3>Forma de Pagamento</h3>
+      <div class="method-tabs">
+        <button class="method-tab active" onclick="selectMethod('pix', this)">PIX</button>
+        <button class="method-tab" onclick="selectMethod('debit', this)">Débito</button>
+        <button class="method-tab" onclick="selectMethod('credit', this)">Crédito</button>
+      </div>
+
+      <!-- PIX -->
+      <div id="pixPanel" class="payment-panel">
+        <div class="pix-box">
+          <div class="pix-qr">
+            <div class="qr-mock">
+              <div class="qr-inner">
+                <span>QR CODE</span>
+                <small>PIX</small>
+              </div>
+            </div>
+          </div>
+          <div class="pix-info">
+            <p><strong>Chave PIX:</strong> sorveteriapedragelada@pix.com</p>
+            <p>Escaneie o QR Code ou copie a chave para pagar</p>
+            <button class="btn-secondary" onclick="copyPix()">Copiar Chave PIX</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DÉBITO -->
+      <div id="debitPanel" class="payment-panel hidden">
+        <div class="form-group">
+          <label>Número do Cartão</label>
+          <input type="text" id="debitNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCard(this)"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Validade</label>
+            <input type="text" id="debitExpiry" placeholder="MM/AA" maxlength="5" oninput="formatExpiry(this)"/>
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" id="debitCVV" placeholder="123" maxlength="3"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nome no Cartão</label>
+          <input type="text" id="debitName" placeholder="NOME SOBRENOME"/>
+        </div>
+      </div>
+
+      <!-- CRÉDITO -->
+      <div id="creditPanel" class="payment-panel hidden">
+        <div class="form-group">
+          <label>Número do Cartão</label>
+          <input type="text" id="creditNumber" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCard(this)"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Validade</label>
+            <input type="text" id="creditExpiry" placeholder="MM/AA" maxlength="5" oninput="formatExpiry(this)"/>
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" id="creditCVV" placeholder="123" maxlength="3"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Nome no Cartão</label>
+          <input type="text" id="creditName" placeholder="NOME SOBRENOME"/>
+        </div>
+        <div class="form-group">
+          <label>Parcelas</label>
+          <select id="installments">
+            <option value="1">1x sem juros</option>
+            <option value="2">2x sem juros</option>
+            <option value="3">3x sem juros</option>
+            <option value="4">4x com 1,99% a.m.</option>
+            <option value="5">5x com 1,99% a.m.</option>
+            <option value="6">6x com 1,99% a.m.</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="order-summary">
+      <h4>Resumo do Pedido</h4>
+      <div id="orderSummaryItems"></div>
+      <div class="summary-total">
+        <span>Total a pagar:</span>
+        <strong id="summaryTotal">R$ 0,00</strong>
+      </div>
+    </div>
+
+    <button class="btn-primary full" onclick="confirmPayment()">Confirmar Pagamento</button>
+  </div>
+</div>
+
+<!-- AVALIAÇÃO DE SATISFAÇÃO -->
+<section class="section rating-section">
+  <h2 class="section-title">Avalie sua Experiência</h2>
+  <p class="section-sub">Sua opinião é muito importante para nós!</p>
+  <div class="rating-card">
+    <div class="stars-container">
+      <span class="star" data-value="1" onclick="setRating(1)">★</span>
+      <span class="star" data-value="2" onclick="setRating(2)">★</span>
+      <span class="star" data-value="3" onclick="setRating(3)">★</span>
+      <span class="star" data-value="4" onclick="setRating(4)">★</span>
+      <span class="star" data-value="5" onclick="setRating(5)">★</span>
+    </div>
+    <p id="ratingLabel" class="rating-label">Selecione uma nota</p>
+    <div class="form-group">
+      <label>Seu nome (opcional)</label>
+      <input type="text" id="ratingName" placeholder="Ex: Maria"/>
+    </div>
+    <div class="form-group">
+      <label>Comentário</label>
+      <textarea id="ratingComment" placeholder="Conte como foi sua experiência..."></textarea>
+    </div>
+    <button class="btn-primary" onclick="submitRating()">Enviar Avaliação</button>
+  </div>
+
+  <div class="reviews-container" id="reviewsContainer"></div>
+</section>
+
+<!-- MEUS PEDIDOS -->
+<section id="pedidos" class="section orders-section">
+  <h2 class="section-title">Painel de Pedidos</h2>
+  <p class="section-sub">Acompanhe o status dos pedidos em tempo real</p>
+
+  <!-- ADMIN TOGGLE -->
+  <div class="admin-bar">
+    <button class="btn-secondary" onclick="toggleAdmin()">
+      <span id="adminToggleLabel">Entrar como Operador</span>
+    </button>
+    <span id="adminBadge" class="admin-badge hidden">MODO OPERADOR</span>
+  </div>
+
+  <div class="orders-board">
+    <div class="orders-column">
+      <div class="col-header pending-header">
+        <span>🕐 Aguardando</span>
+        <span class="col-count" id="countPending">0</span>
+      </div>
+      <div class="orders-list" id="listPending"></div>
+    </div>
+    <div class="orders-column">
+      <div class="col-header preparing-header">
+        <span>👨‍🍳 Preparando</span>
+        <span class="col-count" id="countPreparing">0</span>
+      </div>
+      <div class="orders-list" id="listPreparing"></div>
+    </div>
+    <div class="orders-column">
+      <div class="col-header ready-header">
+        <span>✅ Pronto</span>
+        <span class="col-count" id="countReady">0</span>
+      </div>
+      <div class="orders-list" id="listReady"></div>
+    </div>
+    <div class="orders-column">
+      <div class="col-header delivered-header">
+        <span>🎉 Entregue</span>
+        <span class="col-count" id="countDelivered">0</span>
+      </div>
+      <div class="orders-list" id="listDelivered"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-content">
+    <div class="footer-brand">
+      <span class="brand-icon">🍦</span>
+      <span class="brand-name">Pedra Gelada</span>
+      <p>Os melhores sorvetes artesanais</p>
+    </div>
+    <div class="footer-links">
+      <h4>Links Rápidos</h4>
+      <a href="#cardapio">Cardápio</a>
+      <a href="#pedidos">Pedidos</a>
+      <a href="dashboard.html" target="_blank">Dashboard Analytics</a>
+    </div>
+    <div class="footer-contact">
+      <h4>Contato</h4>
+      <p>📍 Rua das Flores, 123</p>
+      <p>📞 (11) 9 9999-9999</p>
+      <p>⏰ Seg–Dom: 10h às 22h</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2026 Sorveteria Pedra Gelada. Todos os direitos reservados.</p>
+  </div>
+</footer>
+
+<!-- MODAL DE SUCESSO -->
+<div id="successModal" class="modal hidden">
+  <div class="modal-content success-modal">
+    <div class="success-icon">✅</div>
+    <h2>Pedido Confirmado!</h2>
+    <p id="successMessage"></p>
+    <div class="order-number-box">
+      <span>Número do Pedido:</span>
+      <strong id="successOrderNumber"></strong>
+    </div>
+    <p class="success-hint">Você será notificado quando seu pedido estiver pronto!</p>
+    <button class="btn-primary" onclick="closeSuccess()">Ok, obrigado!</button>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/payment.js"></script>
+<script src="js/notifications.js"></script>
+</body>
+</html>
