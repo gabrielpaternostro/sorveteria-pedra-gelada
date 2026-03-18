@@ -35,9 +35,99 @@
         🛒 Carrinho <span id="cartCount" class="cart-badge">0</span>
       </button>
     </li>
+    <li>
+      <button id="navLoginBtn" class="btn-auth" onclick="openAuthModal('login')">
+        👤 Entrar
+      </button>
+      <div id="navUserMenu" class="nav-user-menu hidden">
+        <button class="btn-auth-user" onclick="toggleUserDropdown()">
+          👤 <span id="navUserName"></span> ▾
+        </button>
+        <div id="userDropdown" class="user-dropdown hidden">
+          <a href="#pedidos">Meus Pedidos</a>
+          <a href="#" onclick="openAuthModal('profile')">Minha Conta</a>
+          <hr/>
+          <a href="#" onclick="Auth.logout()" class="logout-link">Sair</a>
+        </div>
+      </div>
+    </li>
   </ul>
   <button class="nav-toggle" onclick="toggleNav()">&#9776;</button>
 </nav>
+
+<!-- MODAL DE AUTENTICAÇÃO -->
+<div id="authModal" class="modal hidden" onclick="handleAuthOverlay(event)">
+  <div class="modal-content auth-modal">
+    <button class="modal-close" onclick="closeAuthModal()">&#10005;</button>
+
+    <!-- ABAS -->
+    <div class="auth-tabs">
+      <button id="tabLogin"    class="auth-tab auth-tab-active" onclick="switchAuthTab('login')">Entrar</button>
+      <button id="tabRegister" class="auth-tab"                 onclick="switchAuthTab('register')">Cadastrar</button>
+    </div>
+
+    <!-- PAINEL LOGIN -->
+    <div id="loginPanel">
+      <div class="auth-header">
+        <div class="auth-icon">🍦</div>
+        <h2>Bem-vindo de volta!</h2>
+        <p>Entre na sua conta para continuar</p>
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="authKeyDown(event, submitLogin)"/>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="input-password">
+          <input type="password" id="loginPassword" placeholder="Sua senha" onkeydown="authKeyDown(event, submitLogin)"/>
+          <button type="button" class="toggle-pass" onclick="togglePassVisibility('loginPassword', this)">👁</button>
+        </div>
+      </div>
+      <p id="loginError" class="auth-error hidden"></p>
+      <button id="btnLogin" class="btn-primary full" onclick="submitLogin()">Entrar</button>
+      <p class="auth-switch">Não tem conta? <a href="#" onclick="switchAuthTab('register')">Cadastre-se grátis</a></p>
+    </div>
+
+    <!-- PAINEL CADASTRO -->
+    <div id="registerPanel" class="hidden">
+      <div class="auth-header">
+        <div class="auth-icon">🎉</div>
+        <h2>Criar sua Conta</h2>
+        <p>Rápido, fácil e gratuito!</p>
+      </div>
+      <div class="form-group">
+        <label>Nome Completo</label>
+        <input type="text" id="regName" placeholder="Ex: João Silva"/>
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="regEmail" placeholder="seu@email.com"/>
+      </div>
+      <div class="form-group">
+        <label>Telefone / WhatsApp</label>
+        <input type="tel" id="regPhone" placeholder="(11) 99999-9999"/>
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <div class="input-password">
+          <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres"/>
+          <button type="button" class="toggle-pass" onclick="togglePassVisibility('regPassword', this)">👁</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Confirmar Senha</label>
+        <div class="input-password">
+          <input type="password" id="regPasswordConfirm" placeholder="Repita a senha" onkeydown="authKeyDown(event, submitRegister)"/>
+          <button type="button" class="toggle-pass" onclick="togglePassVisibility('regPasswordConfirm', this)">👁</button>
+        </div>
+      </div>
+      <p id="regError" class="auth-error hidden"></p>
+      <button id="btnRegister" class="btn-primary full" onclick="submitRegister()">Criar Conta</button>
+      <p class="auth-switch">Já tem conta? <a href="#" onclick="switchAuthTab('login')">Entrar</a></p>
+    </div>
+  </div>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -308,9 +398,30 @@
 </div>
 
 <script src="js/db.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/app.js"></script>
 <script src="js/orders.js"></script>
 <script src="js/payment.js"></script>
 <script src="js/notifications.js"></script>
+<script>
+function togglePassVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+function handleAuthOverlay(e) {
+  if (e.target === document.getElementById('authModal')) closeAuthModal();
+}
+function toggleUserDropdown() {
+  document.getElementById('userDropdown').classList.toggle('hidden');
+}
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('navUserMenu');
+  if (menu && !menu.contains(e.target)) {
+    const dd = document.getElementById('userDropdown');
+    if (dd) dd.classList.add('hidden');
+  }
+});
+</script>
 </body>
 </html>
